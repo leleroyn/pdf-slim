@@ -83,12 +83,18 @@ jobs:
         run: |
           cd "target/${{ matrix.target }}/release"
           NAME="pdf-slim-${{ github.ref_name }}-${{ matrix.target }}"
-          zip "../../../${NAME}.zip" "${{ matrix.bin }}"
+          tar -c -f "../../../${NAME}.tar" "${{ matrix.bin }}"
+          gzip "../../../${NAME}.tar"
 
-      - name: Checksums (Unix)
-        if: "!contains(matrix.os, 'windows')"
+      - name: Checksums (Linux)
+        if: "contains(matrix.target, 'linux')"
         run: |
           sha256sum "target/${{ matrix.target }}/release/${{ matrix.bin }}" > "checksums-${{ matrix.target }}.txt"
+
+      - name: Checksums (macOS)
+        if: "contains(matrix.target, 'darwin')"
+        run: |
+          shasum -a 256 "target/${{ matrix.target }}/release/${{ matrix.bin }}" > "checksums-${{ matrix.target }}.txt"
 
       - name: Checksums (Windows)
         if: "contains(matrix.os, 'windows')"
@@ -120,7 +126,7 @@ jobs:
       - name: Organize release files
         run: |
           mkdir -p release
-          find artifacts -name '*.tar.gz' -o -name '*.zip' | while IFS= read -r f; do
+          find artifacts -name '*.tar.gz' | while IFS= read -r f; do
             cp "$f" release/
           done
           find artifacts -name 'checksums-*.txt' -exec cat {} + > release/checksums.txt
