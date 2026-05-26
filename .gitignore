@@ -1,0 +1,8 @@
+/target
+Cargo.lock
+.omc
+.claude
+/.opencode
+*.slim.pdf
+*.pdf-slim-bak
+*.tmp

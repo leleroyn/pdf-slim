@@ -1,0 +1,31 @@
+[package]
+name = "pdf-slim"
+version = "0.1.0"
+edition = "2021"
+description = "A fast, lightweight PDF compression command-line tool"
+license = "MIT"
+repository = "https://github.com/leleroyn/pdf-slim"
+keywords = ["pdf", "compression", "cli"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+lopdf = "0.34"
+flate2 = "1"
+image = "0.25"
+rayon = "1.10"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = "0.4"
+anyhow = "1"
+
+[profile.release]
+strip = true
+opt-level = 3
+lto = true
+
+[dev-dependencies]
+assert_cmd = "2"
+lopdf = "0.34"
