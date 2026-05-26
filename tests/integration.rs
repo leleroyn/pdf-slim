@@ -5,7 +5,8 @@ fn cli_command() -> assert_cmd::Command {
     cmd
 }
 
-/// Create a simple test PDF at the given path
+/// Create a simple test PDF at the given path.
+/// Includes uncompressed streams so compression actually reduces size.
 fn create_test_pdf(path: &std::path::Path) {
     use lopdf::{Document, Object, Stream, Dictionary};
 
@@ -28,10 +29,11 @@ fn create_test_pdf(path: &std::path::Path) {
         Object::Integer(792),
     ]));
 
-    // Add content stream
-    let mut content_dict = Dictionary::new();
-    content_dict.set(b"Length", Object::Integer(44));
-    let content_stream = Stream::new(content_dict, b"BT /F1 12 Tf 100 700 Td (Hello World) Tj ET".to_vec());
+    // Add content stream (uncompressed, repetitive data to ensure compression helps)
+    let content_dict = Dictionary::new();
+    let padding = " ".repeat(4096);
+    let content_data = format!("BT /F1 12 Tf 100 700 Td (Hello World) Tj ET{}", padding);
+    let content_stream = Stream::new(content_dict, content_data.into_bytes());
     let content_id = doc.add_object(content_stream);
     page_dict.set(b"Contents", Object::Reference(content_id));
 
