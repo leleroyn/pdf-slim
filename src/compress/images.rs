@@ -185,8 +185,6 @@ fn decode_pdf_image(
         return None;
     }
 
-    let mut pixel_data = data;
-
     // If FlateDecode is in the filter chain, decompress first
     let has_flate = filters.is_some_and(|f| f.iter().any(|fl| fl == "FlateDecode" || fl == "LZWDecode"));
 

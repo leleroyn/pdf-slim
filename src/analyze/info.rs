@@ -25,7 +25,6 @@ pub struct ImageInfo {
     pub color_space: String,
     pub filters: String,
     pub size_bytes: usize,
-    pub bits_per_component: i64,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -74,7 +73,6 @@ pub fn analyze_pdf(path: &std::path::Path) -> Result<PdfInfo> {
                     color_space: img.color_space.clone().unwrap_or_default(),
                     filters: img.filters.as_ref().map(|f| f.join(", ")).unwrap_or_default(),
                     size_bytes: img.content.len(),
-                    bits_per_component: img.bits_per_component.unwrap_or(8),
                 });
             }
         }

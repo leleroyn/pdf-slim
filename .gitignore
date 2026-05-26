@@ -6,3 +6,4 @@ Cargo.lock
 *.slim.pdf
 *.pdf-slim-bak
 *.tmp
+/openspec

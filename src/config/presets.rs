@@ -1,6 +1,7 @@
 use crate::config::cli::Preset;
 
 /// Compression configuration derived from preset + CLI overrides
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct CompressionConfig {
     pub jpeg_quality: u8,

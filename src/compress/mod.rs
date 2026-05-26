@@ -20,10 +20,6 @@ pub fn process_file(
     config: &CompressionConfig,
     force: bool,
 ) -> Result<FileResult> {
-    let original_size = std::fs::metadata(input_path)
-        .with_context(|| format!("Failed to read metadata: {}", input_path.display()))?
-        .len();
-
     // Load document
     let load_doc = |p: &Path| -> Result<Document> {
         Document::load(p).map_err(|e| {
