@@ -32,6 +32,14 @@ pub fn process_file(
                     p.display(),
                     p.display()
                 )
+            } else if msg.contains("trailer") || msg.contains("Trailer") {
+                anyhow::anyhow!(
+                    "PDF has a missing or invalid file trailer: {}\n\
+                     Try repairing with: qpdf --repair {} - > {}_fixed.pdf",
+                    msg,
+                    p.display(),
+                    p.display()
+                )
             } else {
                 anyhow::anyhow!("Failed to load PDF: {}", msg)
             }
@@ -99,26 +107,56 @@ pub fn process_file(
             .with_context(|| format!("Failed to create backup: {}", bak.display()))?;
     }
 
-    // Write to temp file, then rename for atomicity
+    // Write to temp file first
     let temp_path = output_path.with_extension(".tmp");
     doc.save(&temp_path)
         .with_context(|| format!("Failed to save PDF: {}", temp_path.display()))?;
 
+    // Compare sizes — only keep the result if it's actually smaller
+    let temp_size = std::fs::metadata(&temp_path)
+        .with_context(|| format!("Failed to read temp file metadata"))?
+        .len();
+
+    if temp_size >= original_size {
+        // No benefit — remove temp file and leave original untouched
+        let _ = std::fs::remove_file(&temp_path);
+        if force {
+            let _ = std::fs::remove_file(&backup_path(input_path));
+        }
+        return Ok(FileResult {
+            input_path: input_path.display().to_string(),
+            output_path: None,
+            status: FileStatus::Skipped,
+            original_size_bytes: original_size,
+            output_size_bytes: None,
+            reduction_percent: 0.0,
+            pages: Some(page_count),
+            skip_reason: Some(SkipReason::NoCompressionBenefit),
+            signature_details: None,
+            error: None,
+            details: Some(CompressionDetails {
+                images_processed: Some(image_stats.images_processed),
+                images_original_bytes: Some(image_stats.images_original_bytes),
+                images_compressed_bytes: Some(image_stats.images_compressed_bytes),
+                streams_compressed: Some(stream_stats.streams_compressed),
+                fonts_deduplicated: None,
+                metadata_removed_bytes: None,
+            }),
+        });
+    }
+
+    // Compressed file is smaller — move it into place
     std::fs::rename(&temp_path, &output_path)
         .with_context(|| format!("Failed to rename output: {}", output_path.display()))?;
 
-    let output_size = std::fs::metadata(&output_path)
-        .with_context(|| format!("Failed to read output metadata"))?
-        .len();
-
-    let pct = reduction_percent(original_size, output_size);
+    let pct = reduction_percent(original_size, temp_size);
 
     Ok(FileResult {
         input_path: input_path.display().to_string(),
         output_path: Some(output_path.display().to_string()),
         status: FileStatus::Compressed,
         original_size_bytes: original_size,
-        output_size_bytes: Some(output_size),
+        output_size_bytes: Some(temp_size),
         reduction_percent: pct,
         pages: Some(page_count),
         skip_reason: None,
