@@ -14,7 +14,7 @@ env:
 
 jobs:
   build:
-    name: ${{ matrix.target }}
+    name: "${{ matrix.target }}"
     strategy:
       fail-fast: false
       matrix:
@@ -32,7 +32,7 @@ jobs:
             target: x86_64-pc-windows-msvc
             bin: pdf-slim.exe
 
-    runs-on: ${{ matrix.os }}
+    runs-on: "${{ matrix.os }}"
 
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: "${{ matrix.target }}"
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -48,29 +48,29 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
+          key: "${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}"
           restore-keys: |
-            ${{ runner.os }}-cargo-deps-
+            "${{ runner.os }}-cargo-deps-"
 
       - name: Build release
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target "${{ matrix.target }}"
 
       - name: Run tests
-        if: matrix.target == 'x86_64-unknown-linux-gnu' || matrix.target == 'x86_64-apple-darwin'
-        run: cargo test --release --target ${{ matrix.target }}
+        if: "matrix.target == 'x86_64-unknown-linux-gnu' || matrix.target == 'x86_64-apple-darwin'"
+        run: cargo test --release --target "${{ matrix.target }}"
 
       - name: Strip binary (Linux)
-        if: contains(matrix.target, 'linux')
+        if: "contains(matrix.target, 'linux')"
         run: |
           strip "target/${{ matrix.target }}/release/${{ matrix.bin }}"
 
       - name: Strip binary (macOS)
-        if: contains(matrix.target, 'darwin')
+        if: "contains(matrix.target, 'darwin')"
         run: |
           strip "target/${{ matrix.target }}/release/${{ matrix.bin }}"
 
       - name: Create archive (Unix)
-        if: !contains(matrix.os, 'windows')
+        if: "!contains(matrix.os, 'windows')"
         shell: bash
         run: |
           cd "target/${{ matrix.target }}/release"
@@ -78,7 +78,7 @@ jobs:
           tar czf "../../../${NAME}.tar.gz" "${{ matrix.bin }}"
 
       - name: Create archive (Windows)
-        if: contains(matrix.os, 'windows')
+        if: "contains(matrix.os, 'windows')"
         shell: bash
         run: |
           cd "target/${{ matrix.target }}/release"
@@ -86,12 +86,12 @@ jobs:
           zip "../../../${NAME}.zip" "${{ matrix.bin }}"
 
       - name: Checksums (Unix)
-        if: !contains(matrix.os, 'windows')
+        if: "!contains(matrix.os, 'windows')"
         run: |
           sha256sum "target/${{ matrix.target }}/release/${{ matrix.bin }}" > "checksums-${{ matrix.target }}.txt"
 
       - name: Checksums (Windows)
-        if: contains(matrix.os, 'windows')
+        if: "contains(matrix.os, 'windows')"
         shell: bash
         run: |
           cmd //c "certutil -hashfile target\${{ matrix.target }}\release\${{ matrix.bin }} SHA256" > "checksums-${{ matrix.target }}.txt" 2>&1
@@ -99,7 +99,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pdf-slim-${{ matrix.target }}
+          name: "pdf-slim-${{ matrix.target }}"
           path: |
             pdf-slim-${{ github.ref_name }}-${{ matrix.target }}.*
             checksums-${{ matrix.target }}.txt
@@ -127,7 +127,7 @@ jobs:
 
       - name: Create Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
         run: |
           gh release create "${{ github.ref_name }}" release/* \
             --title "Release ${{ github.ref_name }}" \
